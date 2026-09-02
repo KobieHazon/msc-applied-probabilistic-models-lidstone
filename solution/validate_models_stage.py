@@ -1,7 +1,8 @@
 """Flow for the fourth stage - validating the models created in the third stage"""
-from typing import Iterable
 
-from unigram_language_model import UnigramLanguageModel
+from collections.abc import Iterable
+
+from .unigram_language_model import UnigramLanguageModel
 
 
 def validate_models(models: Iterable[UnigramLanguageModel]) -> bool:

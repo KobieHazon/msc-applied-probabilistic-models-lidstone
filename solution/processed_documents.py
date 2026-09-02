@@ -1,8 +1,8 @@
 """Helper for minimizing reading from the dataset files and parsing them"""
-import os
+
 from collections import Counter
-from functools import lru_cache
-from typing import Counter as CounterType, Iterator
+from pathlib import Path
+from typing import Iterator
 
 
 class ProcessedDocuments:
@@ -10,37 +10,40 @@ class ProcessedDocuments:
     Helper class for reading and parsing the given dataset files
     """
 
-    def __init__(self, documents_file_path: str):
+    def __init__(self, documents_file_path: str | Path):
         """
         :param documents_file_path: file path for the dataset
         """
-        self._documents_file = open(documents_file_path, "r")
+        self._documents_file_path = Path(documents_file_path)
+        self._article_words_counter: Counter[str] | None = None
+        self._article_words_count: int | None = None
 
     def iter_article_words(self) -> Iterator[str]:
         """
         Iterator for the words in the articles as presented in the dataset file
         :return: word in the article
         """
-        self._documents_file.seek(0)  # start from the beginning of the file
-        for line_num, line in enumerate(self._documents_file):
-            if line_num % 4 == 2:  # only the article content line is interesting
-                for word in line.split():
-                    yield word
+        with self._documents_file_path.open(encoding="utf-8") as documents_file:
+            for line_num, line in enumerate(documents_file):
+                if line_num % 4 == 2:
+                    yield from line.split()
 
-    @lru_cache(maxsize=1)
-    def to_article_words_counter(self) -> CounterType[str]:
+    def to_article_words_counter(self) -> Counter[str]:
         """
         :return: counter object for the words in the articles dataset
         """
-        return Counter(self.iter_article_words())
+        if self._article_words_counter is None:
+            self._article_words_counter = Counter(self.iter_article_words())
+        return self._article_words_counter
 
-    @lru_cache(maxsize=1)
     def count_article_words(self) -> int:
         """
         :return: unique words in the articles dataset
         """
-        return sum(self.to_article_words_counter().values())
+        if self._article_words_count is None:
+            self._article_words_count = sum(self.to_article_words_counter().values())
+        return self._article_words_count
 
     @property
-    def file_name(self):
-        return os.path.basename(self._documents_file.name)  # instructed to only output the basename
+    def file_name(self) -> str:
+        return self._documents_file_path.name

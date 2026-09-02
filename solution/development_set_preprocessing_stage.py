@@ -1,9 +1,13 @@
 """Implementation of the second stage of the exercise - development set preprocessing."""
-from output_file_writer import OutputFileWriter
-from processed_documents import ProcessedDocuments
+
+from .output_file_writer import OutputFileWriter
+from .processed_documents import ProcessedDocuments
 
 
-def development_set_preprocessing(output_writer: OutputFileWriter, development_processed_documents: ProcessedDocuments):
+def development_set_preprocessing(
+    output_writer: OutputFileWriter,
+    development_processed_documents: ProcessedDocuments,
+) -> None:
     """
     Implements the development set preprocessing stage.
     :param output_writer: writes to the output file

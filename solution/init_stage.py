@@ -1,13 +1,16 @@
 """Flow for the first stage (init stage) of the exercise"""
-from consts import LANGUAGE_VOCABULARY_SIZE
-from output_file_writer import OutputFileWriter
-from processed_documents import ProcessedDocuments
+
+from .consts import LANGUAGE_VOCABULARY_SIZE
+from .output_file_writer import OutputFileWriter
+from .processed_documents import ProcessedDocuments
 
 
-def init_stage(output_writer: OutputFileWriter,
-               development_processed_documents: ProcessedDocuments,
-               test_processed_documents: ProcessedDocuments,
-               output_test_word: str):
+def init_stage(
+    output_writer: OutputFileWriter,
+    development_processed_documents: ProcessedDocuments,
+    test_processed_documents: ProcessedDocuments,
+    output_test_word: str,
+) -> None:
     """
     First stage of the exercise
     :param output_writer: writer to output file

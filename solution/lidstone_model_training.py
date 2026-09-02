@@ -1,22 +1,28 @@
-"""Flow for the third and largest stage of the exercise - lidstone model training."""
-import random
-from typing import Collection, Counter, Tuple
+"""Train and select a Lidstone-smoothed unigram language model."""
 
-from consts import SMOOTHING_FACTOR_GRADIENT_DECENT_LEARNING_RATE, SMOOTHING_FACTOR_GRADIENT_THRESHOLD, UNSEEN_WORD
-from output_file_writer import OutputFileWriter
-from unigram_language_model import UnigramLanguageModel
+from collections import Counter
+from collections.abc import Collection
+
+from .consts import (
+    SMOOTHING_FACTOR_MAX,
+    SMOOTHING_FACTOR_MIN,
+    SMOOTHING_FACTOR_STEP,
+    UNSEEN_WORD,
+)
+from .output_file_writer import OutputFileWriter
+from .unigram_language_model import UnigramLanguageModel
 
 
 def lidstone_model_training(
-        output_writer: OutputFileWriter,
-        training_set: Collection[str],
-        training_set_counter: Counter[str],
-        validation_set: Collection[str],
-        no_smoothing_model: UnigramLanguageModel,
-        hundredth_smoothing_model: UnigramLanguageModel,
-        tenth_smoothing_model: UnigramLanguageModel,
-        one_smoothing_model: UnigramLanguageModel,
-        output_test_word: str
+    output_writer: OutputFileWriter,
+    training_set: Collection[str],
+    training_set_counter: Counter[str],
+    validation_set: Collection[str],
+    no_smoothing_model: UnigramLanguageModel,
+    hundredth_smoothing_model: UnigramLanguageModel,
+    tenth_smoothing_model: UnigramLanguageModel,
+    one_smoothing_model: UnigramLanguageModel,
+    output_test_word: str,
 ) -> UnigramLanguageModel:
     """
     Flow for the third and largest stage of the exercise - lidstone model training
@@ -55,47 +61,34 @@ def lidstone_model_training(
     output_writer.write(one_smoothing_model.calculate_perplexity(validation_set))
     # Output 19: The value of λ that you found to minimize the perplexity on the validation set
     optimal_smoothing_factor = round(
-        _find_optimal_smoothing_factor(training_set_counter, validation_set, (0.0001, 2)),  # range instructed
-        2  # instructed for 2 digits after the point
+        _find_optimal_smoothing_factor(training_set_counter, validation_set),
+        2,
     )
     output_writer.write(optimal_smoothing_factor)
     # Output20: The minimized perplexity on the validation set using the best value you found for λ
-    optimal_model = UnigramLanguageModel.from_words_counter(training_set_counter, optimal_smoothing_factor)
+    optimal_model = UnigramLanguageModel.from_words_counter(
+        training_set_counter, optimal_smoothing_factor
+    )
     output_writer.write(optimal_model.calculate_perplexity(validation_set))
     return optimal_model
 
 
 def _find_optimal_smoothing_factor(
-        training_set_counter: Counter[str],
-        validation_set: Collection[str],
-        in_range: Tuple[float, float]
+    training_set_counter: Counter[str],
+    validation_set: Collection[str],
 ) -> float:
     """
-    Performs gradient descent on the smoothing factor to find the one with the minimum perplexity
+    Find the two-decimal smoothing factor with the lowest validation perplexity.
     :param training_set_counter: counter for the training set
     :param validation_set: validation set for calculating the perplexity on
-    :param in_range: range to perform gradient descent in
     :return: optimal smoothing factor for the validation set perplexity
     """
-
-    def get_gradient(point_x: float, step: float = 0.00001) -> float:
-        """
-        Calculates the gradient in a point based on a very close point to it.
-        :param point_x: point of the calculated gradient
-        :param step: closest point as helper for gradient calculation
-        :return: gradient of perplexity graph at point point_x
-        """
-        point_model = UnigramLanguageModel.from_words_counter(training_set_counter, point_x)
-        point_y = point_model.calculate_perplexity(validation_set)
-        other_point_x = point_x - step
-        other_point_model = UnigramLanguageModel.from_words_counter(training_set_counter, other_point_x)
-        other_point_y = other_point_model.calculate_perplexity(validation_set)
-        return (point_y - other_point_y) / (point_x - other_point_x)
-
-    curr_point = random.uniform(*in_range)  # start from random point in the range
-    # while the gradient is larger than the threshold
-    while abs(gradient := get_gradient(curr_point)) > SMOOTHING_FACTOR_GRADIENT_THRESHOLD:
-        # move the point in the opposite side of the gradient
-        curr_point = curr_point - SMOOTHING_FACTOR_GRADIENT_DECENT_LEARNING_RATE * gradient
-
-    return curr_point
+    first_step = round(SMOOTHING_FACTOR_MIN / SMOOTHING_FACTOR_STEP)
+    last_step = round(SMOOTHING_FACTOR_MAX / SMOOTHING_FACTOR_STEP)
+    candidates = (step * SMOOTHING_FACTOR_STEP for step in range(first_step, last_step + 1))
+    return min(
+        candidates,
+        key=lambda smoothing_factor: UnigramLanguageModel.from_words_counter(
+            training_set_counter, smoothing_factor
+        ).calculate_perplexity(validation_set),
+    )
