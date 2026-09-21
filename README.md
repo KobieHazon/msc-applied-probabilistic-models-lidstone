@@ -19,7 +19,7 @@ uv sync --dev
 
 ## Usage
 
-Run the recovered experiment with the supplied development and test data:
+Run the experiment with the supplied development and test data:
 
 ```bash
 uv run apm-lidstone data/develop.txt data/test.txt honduras output.txt
@@ -44,7 +44,3 @@ The test suite includes focused model and corpus-parser tests plus a regression 
 - `solution/`: my Python implementation
 - `results/`: output reproduced by the solution
 - `tests/`: focused tests and the full-data regression check
-
-## Implementation notes
-
-The maintained version adds deterministic model selection, packaging, tests, documentation, and compatibility improvements.
